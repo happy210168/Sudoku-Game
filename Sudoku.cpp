@@ -16,7 +16,6 @@ int pbNum[12][12]={0}; //store the number of numbers which can be input  //depen
 int holeNum = 0;  //the number of holes
 int resultNum = 0; //the number of results
 
-//vector<int> candidate // store the number which not exist in this row & column & block
 vector<int> row_list; //traversal order
 vector<int> col_list; //traversal order
 FILE *ifp;
@@ -32,14 +31,9 @@ void getpbNum();
 void getlist(); //get the traveral list in row_list and col_list
 
 //clear the candidate number
-void clearRow(int value,int row,vector< vector<vector<int> > >& PB);
-void clearCol(int value,int col,vector< vector<vector<int> > >& PB);
-void clearBlock(int value,int row,int col,vector< vector<vector<int> > >& PB);
-
-//Recover the candidate number
-void recoveryRow(int value,int row,vector< vector<vector<int> > >& PB);
-void recoveryCol(int value,int col,vector< vector<vector<int> > >& PB);
-void recoveryBlock(int value,int row,int col,vector< vector<vector<int> > >& PB);
+inline void clearRow(int value,int row,vector< vector<vector<int> > >& PB);
+inline void clearCol(int value,int col,vector< vector<vector<int> > >& PB);
+inline void clearBlock(int value,int row,int col,vector< vector<vector<int> > >& PB);
 
 int checkCol(vector<vector<int> >& v);
 int checkRow(vector<vector<int> >& v); 
@@ -61,7 +55,7 @@ void clockwise(vector<vector<int> >&v);
 void dighole(vector<vector<int> >&v);
 
 int main(){
-	
+	double START,END;
 	int valid = 0;
 	srand((unsigned)time(NULL));	
 	S.resize(12);
@@ -89,25 +83,31 @@ int main(){
 		if(choose=='a' || choose =='b') break;
 	}
 
+	
 
-	ifp = fopen("input.txt","r");
-	ofp1.open("problem.txt",ios::out);
-	ofp2.open("answer.txt",ios::out);
-	//read file
-	if(!ifp || !ofp1 || !ofp2) cerr << "Failed to open" << endl;
-	for(int i=0;i<12;i++){
-		for(int j=0;j<12;j++){
-			fscanf(ifp,"%d",&S[i][j]);
-			getc(ifp);
-		}
-	}
 
 	//Input from file
 	if(choose == 'b'){
+		char file[20];
+		cout << "input filename:";
+		cin >> file;
+		ifp = fopen(file,"r");
+		//read file
+		if(!ifp || !ofp1 || !ofp2) cerr << "Failed to open" << endl;
+		for(int i=0;i<12;i++){
+			for(int j=0;j<12;j++){
+				fscanf(ifp,"%d",&S[i][j]);
+				getc(ifp);
+			}
+		}
+
+		ofp1.open("problem.txt",ios::out);
+		ofp2.open("answer.txt",ios::out);
+
 		if(checkSudoku(S)){
 		 	cout << "Valid problem!\n";
- 			valid = 1;	
 			print_question();
+      valid = 1;
 		}
 		else{ 
 			cout << "Invalid problem!\n";
@@ -120,12 +120,26 @@ int main(){
 
 	//Create Sudoku board randomly
 	if(choose == 'a'){
-		string hole;
-		int dignum;
+		ifp = fopen("input.txt","r");
+		ofp1.open("problem.txt",ios::out);
+		ofp2.open("answer.txt",ios::out);
+		//read file
+		if(!ifp || !ofp1 || !ofp2) cerr << "Failed to open" << endl;
+		for(int i=0;i<12;i++){
+			for(int j=0;j<12;j++){
+				fscanf(ifp,"%d",&S[i][j]);
+				getc(ifp);
+			}
+		}
+
+		char hole[3];
+		int dignum = 0;
+
 		cout << "Please input the number of holes(40~50 or random(r)): "; 
-		cin >> hole;
-		if(hole == "r") dignum = rand()%11 + 10;
-		else dignum = atoi(hole.c_str()) - 30;
+		scanf("%s",hole);
+		if(hole[0] == 'r') dignum = rand()%11 + 10;
+		else dignum = (hole[0]-'0')*10 + hole[1] -'0'-30;
+		if(dignum>=60) cout << "Fail to create!\n";
 
 		tmpS = S;
 		for(int i=0;i<rand()%3+1;i++) mirror(S);
@@ -135,8 +149,9 @@ int main(){
 		for(int i=0;i<rand()%3+1;i++)	swap1(S);
 		getResult(); if(resultNum!=1) S = tmpS; else tmpS = S;
 		for(int i=0;i<rand()%3+1;i++)	clockwise(S);
-		getResult(); if(resultNum!=1) S = tmpS; 
-		changeNum();
+		getResult(); if(resultNum!=1) S = tmpS; else tmpS = S;  
+		changeNum(); 
+		getResult(); if(resultNum!=1) S = tmpS;
 		
 		for(int i=0;i<dignum;i++){ 
 			dighole(S);
@@ -144,8 +159,8 @@ int main(){
 
 		if(checkSudoku(S)){
 		 	cout << "Valid problem\n";
- 			valid = 1;	
 			print_question();	
+ 			valid = 1;	
 		}
 		else{ 
 			cout << "Invalid problem\n";
@@ -164,7 +179,9 @@ int main(){
 	
 
 	//Solve it
+	START = clock();
 	if(valid) getResult(); 
+	END = clock();  //Solve time
 	
 	Space = space; 
 
@@ -190,6 +207,7 @@ int main(){
 					case 1:
 						cout << "1" << endl; 
 						print_result();  //if only one answer, show result.
+						cout << "Solve time: " << (END - START) / CLOCKS_PER_SEC << "sec" << endl;
 						break;
 					default:
 						cout << "2" << endl; //morn than one answer
@@ -226,6 +244,7 @@ int main(){
 			case 1:
 				cout << "1" << endl; 
 				print_result();  //if only one answer, show result.
+				cout << "Solve time: " << (END - START) / CLOCKS_PER_SEC << " sec" << endl;
 				break;
 			default:
 				cout << "2" << endl; //morn than one answer
@@ -264,82 +283,27 @@ void solve(int cur,vector<vector<int> > v,int hole,vector<vector<vector<int> > >
 	
 	if(candidate.size() == 0)	return;	
 	
-
+	
 	if(candidate.size() == 1){
 		int value = candidate[0];
 		v[row][col] = value;
 		clearRow(value,row,PB); clearCol(value,col,PB); clearBlock(value,row,col,PB);
 	}
+	
+
 	for(int a=0;a<candidate.size();a++){
 		int value = candidate[a];
+		vector<vector<vector<int> > > tmpPB;
+		tmpPB = PB;
 		clearRow(value,row,PB); clearCol(value,col,PB); clearBlock(value,row,col,PB);
 		v[row][col] = value;
 		solve(cur+1,v,hole,PB);
 		v[row][col] = 0;
-		recoveryRow(value,row,PB); recoveryCol(value,col,PB); recoveryBlock(value,row,col,PB);
+		PB = tmpPB;
 	}
 }
 
 void find_candidate(int row,int col,vector<int>& v,vector<vector<vector<int> > >& PB){
-	vector<int> tmp;
-	vector<int> r,c,b;
-	for(int a=1;a<=9;a++){
-		if(PB[row][col][a-1] == a) 			
-			tmp.push_back(a);
-	}
-	
-	for(int i=0;i<12;i++){
-		for(int j=0;j<9;j++){
-			if(i==col) continue;
-			int n = PB[row][i][j];
-			if(n>0)	r.push_back(n);
-		}
-	}	
-
-	for(int i=0;i<tmp.size();i++){
-		int n = tmp[i];
-		if(!inVec(n,r)){ 
-			v.push_back(n);
-			return;
-		}
-	}
-
-	for(int i=0;i<12;i++){
-		for(int j=0;j<9;j++){
-			if(i==row) continue;
-			int n = PB[i][col][j];
-			if(n>0)	c.push_back(n);
-		}
-	}
-	for(int i=0;i<tmp.size();i++){
-		int n = tmp[i];
-		if(!inVec(n,c)){ 
-			v.push_back(n);
-			return;
-		}
-	}
-
-	int ROW = 3*(row/3);
-	int COL = 3*(col/3);
-
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			if(ROW+i==row && COL+j==col) continue;
-			for(int k=0;k<9;k++){
-				int n = PB[ROW+i][COL+j][k];
-				if(n>0) b.push_back(n);
-			}
-		}
-	}
-
-	for(int i=0;i<tmp.size();i++){
-		int n = tmp[i];
-		if(!inVec(n,b)){ 
-			v.push_back(n);
-			return;
-		}
-	}
-	
 	for(int a=1;a<=9;a++){
 		if(PB[row][col][a-1] == a) 			
 			v.push_back(a);
@@ -365,13 +329,13 @@ void print_question(){
         }
         cout << endl;
         if (i % 3 == 2){
-            if(i!=11) cout << "--+-------+-------+-------+-------+" << endl;
+            if(i!=11) cout << "--+-------+-------+-------+-------|" << endl;
 						if(i==11) cout << "--+-------+-------+-------+-------+" << endl;
 				}
 				if(i == 11) 
 					cout << "<Input: i [r] [c] [num] / Delete: d [r] [c] / Show answer(s) / Exit(e)> \n";
 		}
-		getholeNum(); cout << "left " << holeNum << " holes!\n";
+		getholeNum(); cout << holeNum << " holes left!" << endl;
 
 		for(int i=0;i<12;i++){
 			for(int j=0;j<12;j++){
@@ -383,7 +347,7 @@ void print_question(){
 }
 
 void print_result(){
-		cout << "\\===============Answer===============" << endl;
+		cout << "\\===============Answer==============" << endl;
 		cout << " \\c 1 2 3   4 5 6   7 8 9  10 11 12" << endl;
     cout << " r\\-------+-------+-------+-------+" << endl;
     for (int i = 0; i < 12; i++)
@@ -401,7 +365,7 @@ void print_result(){
         }
         cout << endl;
         if (i % 3 == 2)
-        	if(i!=11) cout << "--+-------+-------+-------+-------+" << endl;
+        	if(i!=11) cout << "--+-------+-------+-------+-------|" << endl;
 				  else if(i==11) cout << "--+-------+-------+-------+-------+" << endl;
 		}
 		for(int i=0;i<12;i++){
@@ -426,19 +390,19 @@ void getholeNum(){
 			if(S[i][j]==0){ holeNum++; space[i][j]=1; };
 }
 
-void clearRow(int value,int row,vector< vector<vector<int> > >& PB){
+inline void clearRow(int value,int row,vector< vector<vector<int> > >& PB){
 	for(int a=0;a<12;a++){	
 		PB[row][a][value-1] = 0; 
 	}
 }
 
-void clearCol(int value,int col,vector< vector<vector<int> > >& PB){
+inline void clearCol(int value,int col,vector< vector<vector<int> > >& PB){
 	for(int a=0;a<12;a++){	
 		PB[a][col][value-1] = 0; 
 	}
 }
 
-void clearBlock(int value,int row,int col,vector< vector<vector<int> > >& PB){
+inline void clearBlock(int value,int row,int col,vector< vector<vector<int> > >& PB){
 	int r = 3*(row/3);
 	int c = 3*(col/3);
 	for(int i=0; i<3;i++){
@@ -448,55 +412,29 @@ void clearBlock(int value,int row,int col,vector< vector<vector<int> > >& PB){
 	}
 }
 
-void recoveryRow(int value,int row,vector< vector<vector<int> > >& PB){
-	for(int a=0;a<12;a++){	
-		PB[row][a][value-1] = value; 
-	}
-}
-
-void recoveryCol(int value,int col,vector< vector<vector<int> > >& PB){
-	for(int a=0;a<12;a++){	
-		PB[a][col][value-1] = value; 
-	}
-}
-
-void recoveryBlock(int value,int row,int col,vector< vector<vector<int> > >& PB){
-	int r = 3*(row/3);
-	int c = 3*(col/3);
-	for(int i=0; i<3;i++){
-		for(int j=0;j<3;j++){
-			PB[r+i][c+j][value-1]= value;
-		}
-	}
-}
-
 int checkCol(vector<vector<int> >& v){
 	for(int col=0;col<12;col++){	
-	int a[9] = {0};
-	for(int i=0;i<12;i++){
-		if(v[i][col]!=-1 && v[i][col]!=0) a[v[i][col]-1]++;
-	}	
-	for(int j=0;j<9;j++){	
-		if(a[j]>1) return 0;
+		int a[9] = {0};
+		for(int i=0;i<12;i++){
+			if(v[i][col]!=-1 && v[i][col]!=0) a[v[i][col]-1]++;
+		}	
+		for(int j=0;j<9;j++){	
+			if(a[j]>1) return 0;
+		}
 	}
-
-	}
-
 	return 1;
 }
 
 int checkRow(vector<vector<int> >& v){
 	for(int row=0;row<12;row++){	
-	int a[9] = {0};
-	for(int i=0;i<12;i++){
-		if(v[row][i]!=-1 && v[row][i]!=0) a[v[row][i]-1]++;
-	}	
-	for(int j=0;j<9;j++){	
-		if(a[j]>1) return 0;
+		int a[9] = {0};
+		for(int i=0;i<12;i++){
+			if(v[row][i]!=-1 && v[row][i]!=0) a[v[row][i]-1]++;
+		}		
+		for(int j=0;j<9;j++){	
+			if(a[j]>1) return 0;
+		}
 	}
-
-	}
-
 	return 1;
 }
 
@@ -568,7 +506,6 @@ void getpb(){
 		}
 	}
 }
-
 
 int inVec(int num,vector<int> v){
 	for(int a=0;a<v.size();a++){
@@ -819,8 +756,6 @@ void dighole(vector<vector<int> > &v){
 		row = row_lst.at(n);	
 		col = col_lst.at(n);
 
-
-
 		int tmp = v[row][col]; 
 
 		v[row][col] = 0;
@@ -830,7 +765,7 @@ void dighole(vector<vector<int> > &v){
 			return;
 		}
 		v[row][col] = tmp; //cannot dig 
+		count++;
 	}
-	count++;
 }
 
